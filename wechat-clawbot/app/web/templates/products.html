@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}商品管理 - ClawBot管理后台{% endblock %}
+{% block content %}
+<div class="sidebar">
+    <h2>🤖 ClawBot</h2>
+    <nav>
+        <a href="/admin">📊 数据概览</a>
+        <a href="/admin/products" class="active">📦 商品管理</a>
+        <a href="/admin/recharge-cards">💳 充值卡密</a>
+        <a href="/admin/users">👥 用户管理</a>
+        <a href="/admin/orders">📋 订单管理</a>
+        <a href="/admin/transactions">💰 流水记录</a>
+        <a href="/admin/logout" style="margin-top: 30px;">🚪 退出登录</a>
+    </nav>
+</div>
+<div class="main">
+    <div class="header">
+        <h1>商品管理</h1>
+        <button class="btn btn-primary" onclick="openModal('addModal')">+ 新增商品</button>
+    </div>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>商品名称</th>
+                    <th>价格</th>
+                    <th>库存</th>
+                    <th>状态</th>
+                    <th>排序</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>{{ p.id }}</td>
+                    <td>{{ p.name }}</td>
+                    <td>¥{{ "%.2f"|format(p.price) }}</td>
+                    <td>{{ p.stock }}</td>
+                    <td>
+                        {% if p.is_active %}
+                        <span class="tag tag-green">上架中</span>
+                        {% else %}
+                        <span class="tag tag-gray">已下架</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.sort_order }}</td>
+                    <td>
+                        <a href="/admin/products/{{ p.id }}/cards" class="btn btn-sm btn-primary">卡密</a>
+                        <button class="btn btn-sm btn-success" onclick='editProduct({{ p.id|tojson }}, {{ p.name|tojson }}, {{ p.description|tojson }}, {{ p.price }}, {{ 1 if p.is_active else 0 }}, {{ p.sort_order }})'>编辑</button>
+                        <form method="post" action="/admin/products/{{ p.id }}/delete" style="display:inline;" onsubmit="return confirm('确定删除该商品吗？');">
+                            <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="/admin/products?page={{ page - 1 }}">上一页</a>
+            {% endif %}
+            {% for i in range(1, total_pages + 1) %}
+            <a href="/admin/products?page={{ i }}" class="{{ 'active' if i == page }}">{{ i }}</a>
+            {% endfor %}
+            {% if page < total_pages %}
+            <a href="/admin/products?page={{ page + 1 }}">下一页</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>新增商品</h3>
+            <button class="modal-close" onclick="closeModal('addModal')">&times;</button>
+        </div>
+        <form method="post" action="/admin/products/add">
+            <div class="form-group">
+                <label>商品名称</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>价格（元）</label>
+                    <input type="number" step="0.01" name="price" required>
+                </div>
+                <div class="form-group">
+                    <label>排序</label>
+                    <input type="number" name="sort_order" value="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>商品描述</label>
+                <textarea name="description"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">提交</button>
+        </form>
+    </div>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>编辑商品</h3>
+            <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+        </div>
+        <form id="editForm" method="post">
+            <div class="form-group">
+                <label>商品名称</label>
+                <input type="text" name="name" id="editName" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>价格（元）</label>
+                    <input type="number" step="0.01" name="price" id="editPrice" required>
+                </div>
+                <div class="form-group">
+                    <label>排序</label>
+                    <input type="number" name="sort_order" id="editSortOrder">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>状态</label>
+                <select name="is_active" id="editIsActive">
+                    <option value="1">上架</option>
+                    <option value="0">下架</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>商品描述</label>
+                <textarea name="description" id="editDescription"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">保存</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function editProduct(id, name, description, price, isActive, sortOrder) {
+        document.getElementById('editForm').action = '/admin/products/' + id + '/edit';
+        document.getElementById('editName').value = name;
+        document.getElementById('editDescription').value = description;
+        document.getElementById('editPrice').value = price;
+        document.getElementById('editIsActive').value = isActive;
+        document.getElementById('editSortOrder').value = sortOrder;
+        openModal('editModal');
+    }
+</script>
+{% endblock %}

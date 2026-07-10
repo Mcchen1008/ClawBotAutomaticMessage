@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}流水记录 - ClawBot管理后台{% endblock %}
+{% block content %}
+<div class="sidebar">
+    <h2>🤖 ClawBot</h2>
+    <nav>
+        <a href="/admin">📊 数据概览</a>
+        <a href="/admin/products">📦 商品管理</a>
+        <a href="/admin/recharge-cards">💳 充值卡密</a>
+        <a href="/admin/users">👥 用户管理</a>
+        <a href="/admin/orders">📋 订单管理</a>
+        <a href="/admin/transactions" class="active">💰 流水记录</a>
+        <a href="/admin/logout" style="margin-top: 30px;">🚪 退出登录</a>
+    </nav>
+</div>
+<div class="main">
+    <div class="header">
+        <h1>💰 流水记录</h1>
+    </div>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户ID</th>
+                    <th>类型</th>
+                    <th>金额</th>
+                    <th>变动前</th>
+                    <th>变动后</th>
+                    <th>说明</th>
+                    <th>时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td>{{ t.id }}</td>
+                    <td>{{ t.user_id }}</td>
+                    <td>
+                        {% if t.trans_type == 'recharge' %}
+                        <span class="tag tag-green">充值</span>
+                        {% else %}
+                        <span class="tag tag-blue">消费</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if t.trans_type == 'recharge' %}+{% else %}-{% endif %}¥{{ "%.2f"|format(t.amount|abs) }}
+                    </td>
+                    <td>¥{{ "%.2f"|format(t.balance_before) }}</td>
+                    <td>¥{{ "%.2f"|format(t.balance_after) }}</td>
+                    <td>{{ t.description }}</td>
+                    <td>{{ t.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="/admin/transactions?page={{ page - 1 }}">上一页</a>
+            {% endif %}
+            {% for i in range(1, total_pages + 1) %}
+            <a href="/admin/transactions?page={{ i }}" class="{{ 'active' if i == page }}">{{ i }}</a>
+            {% endfor %}
+            {% if page < total_pages %}
+            <a href="/admin/transactions?page={{ page + 1 }}">下一页</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

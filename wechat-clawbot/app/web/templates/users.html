@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}用户管理 - ClawBot管理后台{% endblock %}
+{% block content %}
+<div class="sidebar">
+    <h2>🤖 ClawBot</h2>
+    <nav>
+        <a href="/admin">📊 数据概览</a>
+        <a href="/admin/products">📦 商品管理</a>
+        <a href="/admin/recharge-cards">💳 充值卡密</a>
+        <a href="/admin/users" class="active">👥 用户管理</a>
+        <a href="/admin/orders">📋 订单管理</a>
+        <a href="/admin/transactions">💰 流水记录</a>
+        <a href="/admin/logout" style="margin-top: 30px;">🚪 退出登录</a>
+    </nav>
+</div>
+<div class="main">
+    <div class="header">
+        <h1>👥 用户管理</h1>
+        <form method="get" style="display: flex; gap: 10px;">
+            <input type="text" name="keyword" value="{{ keyword }}" placeholder="搜索用户ID/微信ID" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px;">
+            <button type="submit" class="btn btn-primary">搜索</button>
+        </form>
+    </div>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户ID</th>
+                    <th>微信ID</th>
+                    <th>余额</th>
+                    <th>注册时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.id }}</td>
+                    <td><code>{{ u.user_id }}</code></td>
+                    <td>{{ u.wechat_id or '-' }}</td>
+                    <td>¥{{ "%.2f"|format(u.balance) }}</td>
+                    <td>{{ u.created_at }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick='openBalanceModal({{ u.id }}, {{ u.user_id|tojson }}, {{ u.balance }})'>调整余额</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="/admin/users?page={{ page - 1 }}{% if keyword %}&keyword={{ keyword }}{% endif %}">上一页</a>
+            {% endif %}
+            {% for i in range(1, total_pages + 1) %}
+            <a href="/admin/users?page={{ i }}{% if keyword %}&keyword={{ keyword }}{% endif %}" class="{{ 'active' if i == page }}">{{ i }}</a>
+            {% endfor %}
+            {% if page < total_pages %}
+            <a href="/admin/users?page={{ page + 1 }}{% if keyword %}&keyword={{ keyword }}{% endif %}">下一页</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div id="balanceModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>调整用户余额</h3>
+            <button class="modal-close" onclick="closeModal('balanceModal')">&times;</button>
+        </div>
+        <form id="balanceForm" method="post">
+            <div style="margin-bottom: 15px; color: #7f8c8d;">
+                用户ID：<code id="bmUserId"></code>　当前余额：<span id="bmBalance"></span>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>操作</label>
+                    <select name="action" id="bmAction">
+                        <option value="add">增加余额</option>
+                        <option value="sub">扣除余额</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>金额（元）</label>
+                    <input type="number" step="0.01" name="amount" id="bmAmount" min="0.01" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">提交</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function openBalanceModal(id, userId, balance) {
+        document.getElementById('balanceForm').action = '/admin/users/' + id + '/balance';
+        document.getElementById('bmUserId').textContent = userId;
+        document.getElementById('bmBalance').textContent = '¥' + balance.toFixed(2);
+        document.getElementById('bmAmount').value = '';
+        openModal('balanceModal');
+    }
+</script>
+{% endblock %}

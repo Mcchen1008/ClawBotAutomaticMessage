@@ -219,3 +219,9 @@ __marimo__/
 
 # Source archives
 *.zip
+
+# Runtime data
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}数据概览 - ClawBot管理后台{% endblock %}
+{% block content %}
+<div class="sidebar">
+    <h2>🤖 ClawBot</h2>
+    <nav>
+        <a href="/admin" class="active">📊 数据概览</a>
+        <a href="/admin/products">📦 商品管理</a>
+        <a href="/admin/recharge-cards">💳 充值卡密</a>
+        <a href="/admin/users">👥 用户管理</a>
+        <a href="/admin/orders">📋 订单管理</a>
+        <a href="/admin/transactions">💰 流水记录</a>
+        <a href="/admin/logout" style="margin-top: 30px;">🚪 退出登录</a>
+    </nav>
+</div>
+<div class="main">
+    <div class="header">
+        <h1>数据概览</h1>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="num">{{ stats.user_count }}</div>
+            <div class="label">用户总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="num">{{ stats.order_count }}</div>
+            <div class="label">订单总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="num">¥{{ "%.2f"|format(stats.total_recharge) }}</div>
+            <div class="label">总充值额</div>
+        </div>
+        <div class="stat-card">
+            <div class="num">¥{{ "%.2f"|format(stats.total_purchase) }}</div>
+            <div class="label">总消费额</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

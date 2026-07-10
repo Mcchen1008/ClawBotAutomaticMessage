@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}商品卡密 - ClawBot管理后台{% endblock %}
+{% block content %}
+<div class="sidebar">
+    <h2>🤖 ClawBot</h2>
+    <nav>
+        <a href="/admin">📊 数据概览</a>
+        <a href="/admin/products" class="active">📦 商品管理</a>
+        <a href="/admin/recharge-cards">💳 充值卡密</a>
+        <a href="/admin/users">👥 用户管理</a>
+        <a href="/admin/orders">📋 订单管理</a>
+        <a href="/admin/transactions">💰 流水记录</a>
+        <a href="/admin/logout" style="margin-top: 30px;">🚪 退出登录</a>
+    </nav>
+</div>
+<div class="main">
+    <div class="header">
+        <h1>📦 {{ product.name }} - 卡密管理</h1>
+        <a href="/admin/products" class="btn btn-primary">← 返回商品列表</a>
+    </div>
+    <div class="card">
+        <div style="margin-bottom: 15px;">
+            <button class="btn btn-primary" onclick="openModal('addModal')">+ 批量添加卡密</button>
+            <a href="?used=all" class="btn btn-sm {{ 'btn-primary' if used == 'all' else 'btn-sm' }}">全部</a>
+            <a href="?used=unused" class="btn btn-sm {{ 'btn-success' if used == 'unused' else 'btn-sm' }}">未使用</a>
+            <a href="?used=used" class="btn btn-sm {{ 'btn-danger' if used == 'used' else 'btn-sm' }}">已使用</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>卡号</th>
+                    <th>卡密</th>
+                    <th>状态</th>
+                    <th>使用时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in cards %}
+                <tr>
+                    <td>{{ c.id }}</td>
+                    <td><code>{{ c.card_code }}</code></td>
+                    <td><code>{{ c.card_secret or '-' }}</code></td>
+                    <td>
+                        {% if c.is_used %}
+                        <span class="tag tag-red">已使用</span>
+                        {% else %}
+                        <span class="tag tag-green">未使用</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ c.used_at or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="?page={{ page - 1 }}&used={{ used }}">上一页</a>
+            {% endif %}
+            {% for i in range(1, total_pages + 1) %}
+            <a href="?page={{ i }}&used={{ used }}" class="{{ 'active' if i == page }}">{{ i }}</a>
+            {% endfor %}
+            {% if page < total_pages %}
+            <a href="?page={{ page + 1 }}&used={{ used }}">下一页</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>批量添加卡密</h3>
+            <button class="modal-close" onclick="closeModal('addModal')">&times;</button>
+        </div>
+        <form method="post" action="/admin/products/{{ product.id }}/cards/add">
+            <div class="form-group">
+                <label>卡密数据（每行一个，格式：卡号----卡密）</label>
+                <textarea name="card_data" placeholder="卡号1----卡密1&#10;卡号2----卡密2" rows="10" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">批量导入</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+</script>
+{% endblock %}
